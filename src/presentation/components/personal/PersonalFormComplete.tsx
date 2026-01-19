@@ -20,12 +20,11 @@ import { MockPersonalRepository } from '@/src/infrastructure/repositories/MockPe
 import { CreatePersonalUseCase } from '@/src/application/use-cases/CreatePersonalUseCase';
 import { UpdatePersonalUseCase } from '@/src/application/use-cases/UpdatePersonalUseCase';
 import { Personal } from '@/src/domain/entities/Personal';
+import { Area } from '@/src/domain/entities/Area';
 import { 
-  Area, 
   Turno, 
   Break, 
   Almuerzo,
-  AreaLabels,
   TurnoLabels,
   BreakLabels,
   AlmuerzoLabels
@@ -39,9 +38,10 @@ interface PersonalFormProps {
   selectedPersonal?: Personal | null;
   onSuccess: () => void;
   onCancel: () => void;
+  areas: Area[];
 }
 
-export function PersonalFormComplete({ selectedPersonal, onSuccess, onCancel }: PersonalFormProps) {
+export function PersonalFormComplete({ selectedPersonal, onSuccess, onCancel, areas }: PersonalFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [area, setArea] = useState<string>(selectedPersonal?.id_a.toString() || '1');
   const [turno, setTurno] = useState<string>(selectedPersonal?.id_t.toString() || '1');
@@ -311,9 +311,9 @@ export function PersonalFormComplete({ selectedPersonal, onSuccess, onCancel }: 
                 <SelectValue placeholder="Seleccione área" />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(AreaLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    {label}
+                {areas.map((areaItem) => (
+                  <SelectItem key={areaItem.id} value={areaItem.id.toString()}>
+                    {areaItem.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>

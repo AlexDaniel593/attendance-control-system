@@ -12,17 +12,23 @@ import {
   DialogTitle,
 } from '@/src/presentation/components/ui/dialog';
 import { Personal } from '@/src/domain/entities/Personal';
+import { Area } from '@/src/domain/entities/Area';
 import { MockPersonalRepository } from '@/src/infrastructure/repositories/MockPersonalRepository';
+import { MockAreaRepository } from '@/src/infrastructure/repositories/MockAreaRepository';
 import { GetAllPersonalUseCase } from '@/src/application/use-cases/GetAllPersonalUseCase';
+import { GetAllAreasUseCase } from '@/src/application/use-cases/GetAllAreasUseCase';
 import { PersonalTable } from '@/src/presentation/components/personal/PersonalTable';
 import { PersonalFormComplete } from '@/src/presentation/components/personal/PersonalFormComplete';
 
 const personalRepository = new MockPersonalRepository();
+const areaRepository = new MockAreaRepository();
 const getAllPersonalUseCase = new GetAllPersonalUseCase(personalRepository);
+const getAllAreasUseCase = new GetAllAreasUseCase(areaRepository);
 
 export default function PersonalPage() {
   const [personal, setPersonal] = useState<Personal[]>([]);
   const [filteredPersonal, setFilteredPersonal] = useState<Personal[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [selectedPersonal, setSelectedPersonal] = useState<Personal | null>(null);
@@ -31,9 +37,13 @@ export default function PersonalPage() {
   const loadPersonal = async () => {
     try {
       setIsLoading(true);
-      const data = await getAllPersonalUseCase.execute();
-      setPersonal(data);
-      setFilteredPersonal(data);
+      const [personalData, areasData] = await Promise.all([
+        getAllPersonalUseCase.execute(),
+        getAllAreasUseCase.execute(),
+      ]);
+      setPersonal(personalData);
+      setFilteredPersonal(personalData);
+      setAreas(areasData);
     } catch (error) {
       toast.error('Error al cargar personal', {
         description: error instanceof Error ? error.message : 'Error desconocido',
@@ -144,6 +154,7 @@ export default function PersonalPage() {
             selectedPersonal={selectedPersonal}
             onSuccess={handleCreateSuccess}
             onCancel={handleCancel}
+            areas={areas}
           />
         </DialogContent>
       </Dialog>
