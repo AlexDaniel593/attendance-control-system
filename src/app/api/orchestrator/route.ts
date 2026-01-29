@@ -1,17 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ApiPausaRepository } from '@/src/infrastructure/repositories/ApiPausaRepository';
+import { MockPausaRepository } from '@/src/infrastructure/repositories/MockPausaRepository';
+import { GetAllPausasUseCase } from '@/src/application/use-cases/GetAllPausasUseCase';
+import { SearchPausasUseCase } from '@/src/application/use-cases/SearchPausasUseCase';
 
 /**
- * API Orchestrator - Client-side API orchestration
- * Este endpoint será utilizado en el futuro para orquestar llamadas a múltiples APIs
- * Por ahora retorna datos mock para desarrollo del frontend
+ * API Orchestrator - Orquestación de llamadas a APIs externas
+ * 
+ * Este endpoint actúa como capa de orquestación entre el frontend y las APIs externas.
+ * Permite cambiar fácilmente entre implementaciones Mock y APIs reales.
+ * 
+ * Configuración:
+ * - USE_REAL_API_PAUSAS=true: Usa la API real de tiempos-fuera (puerto 5004)
+ * - USE_REAL_API_PAUSAS=false: Usa datos mock para desarrollo
  */
+
+// Control de uso de APIs reales vs Mock
+const USE_REAL_API_PAUSAS = process.env.USE_REAL_API_PAUSAS === 'true';
+
+// Instancias de repositorios
+const pausaRepository = USE_REAL_API_PAUSAS 
+  ? new ApiPausaRepository() 
+  : new MockPausaRepository();
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const resource = searchParams.get('resource');
+  const query = searchParams.get('query');
 
   try {
     switch (resource) {
+      case 'pausas': {
+        if (query) {
+          // Búsqueda de pausas
+          const searchUseCase = new SearchPausasUseCase(pausaRepository);
+          const pausas = await searchUseCase.execute(query);
+          return NextResponse.json({
+            success: true,
+            data: pausas,
+            source: USE_REAL_API_PAUSAS ? 'API Real (Puerto 5004)' : 'Mock Data',
+          });
+        } else {
+          // Obtener todas las pausas
+          const getAllUseCase = new GetAllPausasUseCase(pausaRepository);
+          const pausas = await getAllUseCase.execute();
+          return NextResponse.json({
+            success: true,
+            data: pausas,
+            source: USE_REAL_API_PAUSAS ? 'API Real (Puerto 5004)' : 'Mock Data',
+          });
+        }
+      }
+
       case 'personal':
         return NextResponse.json({
           success: true,
@@ -33,6 +73,7 @@ export async function GET(request: NextRequest) {
               salario: 2500.00,
             },
           ],
+          source: 'Mock Data',
         });
 
       case 'attendance':
@@ -40,6 +81,7 @@ export async function GET(request: NextRequest) {
           success: true,
           data: [],
           message: 'No hay registros de asistencia',
+          source: 'Mock Data',
         });
 
       default:
@@ -49,6 +91,7 @@ export async function GET(request: NextRequest) {
         );
     }
   } catch (error) {
+    console.error('Error en orchestrator:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -65,6 +108,17 @@ export async function POST(request: NextRequest) {
     const { resource, data } = body;
 
     switch (resource) {
+      case 'pausas': {
+        // Crear pausas usando el repositorio configurado
+        const pausa = await pausaRepository.create(data);
+        return NextResponse.json({
+          success: true,
+          data: pausa,
+          message: 'Pausa(s) creada(s) exitosamente',
+          source: USE_REAL_API_PAUSAS ? 'API Real (Puerto 5004)' : 'Mock Data',
+        });
+      }
+
       case 'personal':
         // Simular creación de personal
         return NextResponse.json({
@@ -74,6 +128,7 @@ export async function POST(request: NextRequest) {
             ...data,
           },
           message: 'Personal creado exitosamente',
+          source: 'Mock Data',
         });
 
       case 'login':
@@ -101,6 +156,84 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
+    console.error('Error en orchestrator POST:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { resource, id, data } = body;
+
+    switch (resource) {
+      case 'pausas': {
+        // Actualizar pausa usando el repositorio configurado
+        const pausa = await pausaRepository.update(id, data);
+        return NextResponse.json({
+          success: true,
+          data: pausa,
+          message: 'Pausa actualizada exitosamente',
+          source: USE_REAL_API_PAUSAS ? 'API Real (Puerto 5004)' : 'Mock Data',
+        });
+      }
+
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Recurso no encontrado' },
+          { status: 404 }
+        );
+    }
+  } catch (error) {
+    console.error('Error en orchestrator PUT:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const resource = searchParams.get('resource');
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'ID no proporcionado' },
+        { status: 400 }
+      );
+    }
+
+    switch (resource) {
+      case 'pausas': {
+        // Eliminar pausa usando el repositorio configurado
+        const success = await pausaRepository.delete(Number(id));
+        return NextResponse.json({
+          success,
+          message: success ? 'Pausa eliminada exitosamente' : 'No se pudo eliminar la pausa',
+          source: USE_REAL_API_PAUSAS ? 'API Real (Puerto 5004)' : 'Mock Data',
+        });
+      }
+
+      default:
+        return NextResponse.json(
+          { success: false, error: 'Recurso no encontrado' },
+          { status: 404 }
+        );
+    }
+  } catch (error) {
+    console.error('Error en orchestrator DELETE:', error);
     return NextResponse.json(
       { 
         success: false, 
