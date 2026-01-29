@@ -5,13 +5,7 @@ import { Pausa } from '@/src/domain/entities/Pausa';
 import { PausaForm } from '@/src/presentation/components/pausas/PausaForm';
 import { PausaTable } from '@/src/presentation/components/pausas/PausaTable';
 import { Button } from '@/src/presentation/components/ui/button';
-import { MockPausaRepository } from '@/src/infrastructure/repositories/MockPausaRepository';
 import { MockPersonalRepository } from '@/src/infrastructure/repositories/MockPersonalRepository';
-import { GetAllPausasUseCase } from '@/src/application/use-cases/GetAllPausasUseCase';
-import { CreatePausaUseCase } from '@/src/application/use-cases/CreatePausaUseCase';
-import { UpdatePausaUseCase } from '@/src/application/use-cases/UpdatePausaUseCase';
-import { DeletePausaUseCase } from '@/src/application/use-cases/DeletePausaUseCase';
-import { SearchPausasUseCase } from '@/src/application/use-cases/SearchPausasUseCase';
 import { GetAllPersonalUseCase } from '@/src/application/use-cases/GetAllPersonalUseCase';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,15 +16,10 @@ export default function PausasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [empleados, setEmpleados] = useState<Array<{ id: string; nombre: string }>>([]);
+  const [dataSource, setDataSource] = useState<string>('');
 
-  // Repositorios y casos de uso
-  const pausaRepository = new MockPausaRepository();
+  // Repositorio para personal (temporal)
   const personalRepository = new MockPersonalRepository();
-  const getAllPausasUseCase = new GetAllPausasUseCase(pausaRepository);
-  const createPausaUseCase = new CreatePausaUseCase(pausaRepository);
-  const updatePausaUseCase = new UpdatePausaUseCase(pausaRepository);
-  const deletePausaUseCase = new DeletePausaUseCase(pausaRepository);
-  const searchPausasUseCase = new SearchPausasUseCase(pausaRepository);
   const getAllPersonalUseCase = new GetAllPersonalUseCase(personalRepository);
 
   useEffect(() => {
@@ -40,11 +29,21 @@ export default function PausasPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [pausasData, personalData] = await Promise.all([
-        getAllPausasUseCase.execute(),
-        getAllPersonalUseCase.execute(),
-      ]);
-      setPausas(pausasData);
+      
+      // Obtener pausas desde el orchestrator
+      const pausasResponse = await fetch('/api/orchestrator?resource=pausas');
+      const pausasResult = await pausasResponse.json();
+      
+      // Obtener personal (temporal con mock)
+      const personalData = await getAllPersonalUseCase.execute();
+      
+      if (pausasResult.success) {
+        setPausas(pausasResult.data);
+        setDataSource(pausasResult.source || 'Unknown');
+      } else {
+        toast.error('Error al cargar pausas: ' + pausasResult.error);
+      }
+      
       setEmpleados(
         personalData.map((p) => ({
           id: p.cl,
@@ -61,8 +60,14 @@ export default function PausasPage() {
 
   const loadPausas = async () => {
     try {
-      const data = await getAllPausasUseCase.execute();
-      setPausas(data);
+      const response = await fetch('/api/orchestrator?resource=pausas');
+      const result = await response.json();
+      
+      if (result.success) {
+        setPausas(result.data);
+      } else {
+        toast.error('Error al cargar pausas: ' + result.error);
+      }
     } catch (error) {
       toast.error('Error al cargar los registros');
       console.error(error);
@@ -73,31 +78,59 @@ export default function PausasPage() {
     try {
       if (selectedPausa) {
         // Actualizar
-        await updatePausaUseCase.execute(selectedPausa.id, {
-          estado: data.estado,
-          subEstado: data.subEstado,
-          observacion: data.observacion,
-          empleadosIds: data.empleadosIds,
-          fechaPausa: data.fechaPausa,
-          horaInicio: data.horaInicio,
-          horaFin: data.horaFin,
+        const response = await fetch('/api/orchestrator', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resource: 'pausas',
+            id: selectedPausa.id,
+            data: {
+              estado: data.estado,
+              subEstado: data.subEstado,
+              observacion: data.observacion,
+              empleadosIds: data.empleadosIds,
+              fechaPausa: data.fechaPausa,
+              horaInicio: data.horaInicio,
+              horaFin: data.horaFin,
+            }
+          })
         });
-        toast.success('Registro actualizado exitosamente');
+        
+        const result = await response.json();
+        if (result.success) {
+          toast.success('Registro actualizado exitosamente');
+        } else {
+          toast.error('Error al actualizar: ' + result.error);
+        }
       } else {
         // Crear
-        await createPausaUseCase.execute({
-          estado: data.estado,
-          subEstado: data.subEstado,
-          observacion: data.observacion,
-          empleadosIds: data.empleadosIds,
-          fechaPausa: data.fechaPausa,
-          horaInicio: data.horaInicio,
-          horaFin: data.horaFin,
-        } as Omit<Pausa, 'id'>);
-        toast.success('Registro creado exitosamente');
+        const response = await fetch('/api/orchestrator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resource: 'pausas',
+            data: {
+              estado: data.estado,
+              subEstado: data.subEstado,
+              observacion: data.observacion,
+              empleadosIds: data.empleadosIds,
+              fechaPausa: data.fechaPausa,
+              horaInicio: data.horaInicio,
+              horaFin: data.horaFin,
+            }
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          toast.success('Registro creado exitosamente');
+        } else {
+          toast.error('Error al crear: ' + result.error);
+        }
       }
       await loadPausas();
       setSelectedPausa(null);
+      setFormOpen(false);
     } catch (error) {
       toast.error('Error al guardar el registro');
       throw error;
@@ -123,17 +156,38 @@ export default function PausasPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      await deletePausaUseCase.execute(id);
-      await loadPausas();
+      const response = await fetch(`/api/orchestrator?resource=pausas&id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        toast.success('Registro eliminado exitosamente');
+        await loadPausas();
+      } else {
+        toast.error('Error al eliminar: ' + result.error);
+      }
     } catch (error) {
-      throw error;
+      toast.error('Error al eliminar el registro');
+      console.error(error);
     }
   };
 
   const handleSearch = async (query: string) => {
     try {
-      const results = await searchPausasUseCase.execute(query);
-      setPausas(results);
+      if (!query.trim()) {
+        await loadPausas();
+        return;
+      }
+      
+      const response = await fetch(`/api/orchestrator?resource=pausas&query=${encodeURIComponent(query)}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setPausas(result.data);
+      } else {
+        toast.error('Error en la búsqueda: ' + result.error);
+      }
     } catch (error) {
       toast.error('Error al buscar registros');
     }
@@ -155,6 +209,11 @@ export default function PausasPage() {
           <p className="text-muted-foreground mt-2">
             Administre los tiempos de capacitación, permisos y reuniones del personal
           </p>
+          {dataSource && (
+            <p className="text-xs text-muted-foreground mt-1">
+              📡 Fuente: <span className="font-mono">{dataSource}</span>
+            </p>
+          )}
         </div>
         <Button onClick={handleNew}>
           <Plus className="h-4 w-4 mr-2" />
