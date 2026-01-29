@@ -10,7 +10,7 @@ export const API_CONFIG = {
    * Endpoints: /empleados, /pausas
    */
   TIEMPOS_FUERA: {
-    BASE_URL: process.env.NEXT_PUBLIC_API_TIEMPOS_FUERA_URL || 'http://localhost:5004/api',
+    BASE_URL: process.env.NEXT_PUBLIC_API_TIEMPOS_FUERA_URL,
     ENDPOINTS: {
       EMPLEADOS: '/empleados',
       PAUSAS: '/pausas',
@@ -24,7 +24,7 @@ export const API_CONFIG = {
    * Puerto: TBD
    */
   PERSONAL: {
-    BASE_URL: process.env.NEXT_PUBLIC_API_PERSONAL_URL || 'http://localhost:5001/api',
+    BASE_URL: process.env.NEXT_PUBLIC_API_PERSONAL_URL,
     ENDPOINTS: {
       // TODO: Definir endpoints cuando se implemente la API
     },
@@ -35,7 +35,7 @@ export const API_CONFIG = {
    * Puerto: TBD
    */
   TURNOS: {
-    BASE_URL: process.env.NEXT_PUBLIC_API_TURNOS_URL || 'http://localhost:5002/api',
+    BASE_URL: process.env.NEXT_PUBLIC_API_TURNOS_URL,
     ENDPOINTS: {
       // TODO: Definir endpoints cuando se implemente la API
     },
@@ -46,7 +46,7 @@ export const API_CONFIG = {
    * Puerto: TBD
    */
   RECESOS: {
-    BASE_URL: process.env.NEXT_PUBLIC_API_RECESOS_URL || 'http://localhost:5003/api',
+    BASE_URL: process.env.NEXT_PUBLIC_API_RECESOS_URL,
     ENDPOINTS: {
       // TODO: Definir endpoints cuando se implemente la API
     },
@@ -57,7 +57,7 @@ export const API_CONFIG = {
    * Puerto: TBD
    */
   FIRMAS: {
-    BASE_URL: process.env.NEXT_PUBLIC_API_FIRMAS_URL || 'http://localhost:5005/api',
+    BASE_URL: process.env.NEXT_PUBLIC_API_FIRMAS_URL,
     ENDPOINTS: {
       // TODO: Definir endpoints cuando se implemente la API
     },

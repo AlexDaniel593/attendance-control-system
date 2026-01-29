@@ -209,11 +209,6 @@ export default function PausasPage() {
           <p className="text-muted-foreground mt-2">
             Administre los tiempos de capacitación, permisos y reuniones del personal
           </p>
-          {dataSource && (
-            <p className="text-xs text-muted-foreground mt-1">
-              📡 Fuente: <span className="font-mono">{dataSource}</span>
-            </p>
-          )}
         </div>
         <Button onClick={handleNew}>
           <Plus className="h-4 w-4 mr-2" />

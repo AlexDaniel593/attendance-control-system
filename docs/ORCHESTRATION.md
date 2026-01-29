@@ -74,12 +74,6 @@ src/
 
 Crea un archivo `.env.local` basado en `.env.local.example`:
 
-```bash
-# API de Tiempos Fuera
-NEXT_PUBLIC_API_TIEMPOS_FUERA_URL=http://localhost:5004/api
-USE_REAL_API_PAUSAS=false
-```
-
 ### 2. Cambiar entre Mock y API Real
 
 Para usar datos **Mock** (desarrollo sin dependencias):
@@ -92,58 +86,7 @@ Para usar la **API real** (requiere contenedor Docker corriendo):
 USE_REAL_API_PAUSAS=true
 ```
 
-## 📡 API de Tiempos Fuera (Puerto 5004)
-
-### Endpoints Disponibles
-
-#### Obtener todas las pausas
-```http
-GET /api/orchestrator?resource=pausas
-```
-
-#### Buscar pausas
-```http
-GET /api/orchestrator?resource=pausas&query=2024-05-20
-```
-
-#### Crear pausa(s)
-```http
-POST /api/orchestrator
-Content-Type: application/json
-
-{
-  "resource": "pausas",
-  "data": {
-    "estado": "Almuerzo",
-    "subEstado": "Comedor",
-    "observacion": "Pausa de almuerzo",
-    "empleadosIds": ["1720123456", "1720987654"],
-    "fechaPausa": "2024-05-20",
-    "horaInicio": "12:30",
-    "horaFin": "13:30"
-  }
-}
-```
-
-#### Actualizar pausa
-```http
-PUT /api/orchestrator
-Content-Type: application/json
-
-{
-  "resource": "pausas",
-  "id": 15,
-  "data": {
-    "observacion": "Corrección de hora",
-    "horaFin": "13:45"
-  }
-}
-```
-
-#### Eliminar pausa
-```http
-DELETE /api/orchestrator?resource=pausas&id=15
-```
+# API TIEMPOS FUERA
 
 ## 🔄 Mapeo de Datos
 
