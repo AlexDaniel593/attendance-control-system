@@ -52,7 +52,12 @@ export interface PausasResponse {
  */
 export class TiemposFueraApiClient extends BaseApiClient {
   constructor() {
-    super(API_CONFIG.TIEMPOS_FUERA.BASE_URL);
+    const baseUrl = API_CONFIG.TIEMPOS_FUERA.BASE_URL;
+    if (!baseUrl) {
+      throw new Error('TIEMPOS_FUERA.BASE_URL is not configured in API_CONFIG');
+    }
+
+    super(baseUrl);
   }
 
   /**
@@ -86,7 +91,7 @@ export class TiemposFueraApiClient extends BaseApiClient {
     fecha_fin?: string;
   }): Promise<PausaApiResponse[]> {
     const queryParams: Record<string, string> = {};
-    
+
     if (params?.ci) queryParams.ci = params.ci;
     if (params?.fecha_inicio) queryParams.fecha_inicio = params.fecha_inicio;
     if (params?.fecha_fin) queryParams.fecha_fin = params.fecha_fin;
