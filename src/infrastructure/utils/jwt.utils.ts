@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tu-secreto-super-seguro-cambia-esto-en-produccion-12345';
+const JWT_SECRET = process.env.JWT_SECRET || 'jwt_secret_key';
 
 export interface JWTPayload {
   ci: string;
