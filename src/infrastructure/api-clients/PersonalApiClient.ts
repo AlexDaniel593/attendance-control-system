@@ -37,6 +37,8 @@ export interface CreatePersonalRequest {
   ci: string;
   id_a: number;
   id_t: number;
+  id_b: number;
+  id_ba: number;
   nombres: string;
   apellidos: string;
   direccion: string;

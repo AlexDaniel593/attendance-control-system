@@ -1,9 +1,34 @@
 'use client';
 
 import { useAuth } from '@/src/presentation/hooks/useAuth';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [totalPersonal, setTotalPersonal] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Cargar total de personal
+        const personalResponse = await fetch('/api/orchestrator?resource=personal');
+        const personalResult = await personalResponse.json();
+        
+        if (personalResult.success) {
+          setTotalPersonal(personalResult.data.length);
+        }
+      } catch (error) {
+        console.error('Error al cargar estadísticas:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadStats();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -21,7 +46,9 @@ export default function DashboardPage() {
           <div className="flex flex-row items-center justify-between space-y-0 pb-2">
             <h3 className="text-sm font-medium">Total Personal</h3>
           </div>
-          <div className="text-2xl font-bold">2</div>
+          <div className="text-2xl font-bold">
+            {isLoading ? '...' : totalPersonal}
+          </div>
           <p className="text-xs text-muted-foreground">
             Empleados registrados en el sistema
           </p>

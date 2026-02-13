@@ -72,6 +72,8 @@ export class ApiPersonalRepository implements IPersonalRepository {
         ci: personalData.ci,
         id_a: personalData.id_a,
         id_t: personalData.id_t,
+        id_b: personalData.id_b,
+        id_ba: personalData.id_ba,
         nombres: personalData.nombres,
         apellidos: personalData.apellidos,
         direccion: personalData.direccion,
